@@ -2,8 +2,9 @@
 # make PASSWORD=XXX downsig1
 export OMP_NUM_THREADS=2
 spmtPos:=/cvmfs/juno.ihep.ac.cn/sl6_amd64_gcc830/Pre-Release/J19v1r1-Pre4/offline/Simulation/DetSimV2/DetSimOptions/data/3inch_pos.csv
-bkgpath:=$(wildcard /junofs/users/junoprotondecay/zhangaq/data/analysis/BKG/ANRawData_*.root)
-bkgs:=$(bkgpath:/junofs/users/junoprotondecay/zhangaq/data/analysis/BKG/ANRawData_%.root=/junofs/users/junoprotondecay/zhangaq/data/analysis/BKGsplit/ANRawData_%.root)
+# generate the filename of the split 
+bkgpath:=$(wildcard BKGnew/ANNewData_A_*.root)
+bkgs:=$(bkgpath:BKGnew/ANNewData_A_%.root=BKGsplit/ANRawData_%.root)
 downbkg%:
 	rsync -P --rsh='sshpass -p $(PASSWORD) ssh -l junoprotondecay' lxslc701.ihep.ac.cn:~/offline3745/BKG/ana/RawData/ANRawData_$*.root BKG/
 downsig%:
@@ -25,7 +26,7 @@ downnewbkg1:
 
 # split the root file to support parallel
 bkgsplit: $(bkgs)
-BKGsplit/ANRawData_%.root: BKG/ANRawData_%.root
+BKGsplit/ANRawData_%.root: BKGnew/ANNewData_A_%.root
 	mkdir -p $(dir $@)
 	root -lbq splitroot.C\(\"$<\",\"$@\",10000,$**40000\)
 SIG_LSPMT/%.png: SIG_LSPMT/PDRawData_0.root
@@ -37,6 +38,7 @@ SIG_test.root: /junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulati
 BKG_test/ANRawData_0.root: $(wildcard /junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation/DSNB-NC/ptarget/*/summary.root)
 	mkdir -p $(dir $@)
 	hadd -f $@ $^
+# result of main group
 BKG_test/ANRawData_1.root: $(wildcard /junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation/DSNB-NC/ptarget/*/summary.root)
 	root -lbq mergeRoot.C\(100000,200000,1000,\"$@\",\"/junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation/DSNB-NC/ptarget/\%d/summary.root\"\) 
 spmtGeometry.txt: $(spmtPos)
