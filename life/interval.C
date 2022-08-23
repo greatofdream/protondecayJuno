@@ -93,7 +93,7 @@ void fcStore(TFile* f, Double_t step=0.1, Double_t bkg=1, Int_t size =30000, Dou
         observe[i] = step*i;
         itulUp[i] = fc.CalculateUpperLimit(observe[i], bkg);
         itulLow[i] = fc.GetLowerLimit();
-        if(i%10==0){
+        if(i%10==0){//control the observe[i] is integer
             sensitivity += TMath::Poisson(observe[i],bkg)*itulUp[i];
         }
     }
@@ -157,9 +157,9 @@ void clsStore(TFile* f, Double_t step=0.001, Int_t bkg=1, Int_t size =10000, Dou
     t1->Fill();
     t1->Write();
 }
-void fcData(TString filename="interval_bkg0.008438.root"){
+void fcData(float bkg=0.008438, TString filename="interval_bkg0.008438.root"){
     TFile *f = new TFile(filename, "UPDATE");
-    fcStore(f,0.1, 0.008438,200);
+    fcStore(f, 0.1, bkg, 200);
 }
 void storeData(TString filename="interval_bkg1.root"){
     TFile *f = new TFile(filename, "UPDATE");

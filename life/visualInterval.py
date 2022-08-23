@@ -1,20 +1,21 @@
-import h5py,numpy as np,uproot
+import uproot3
 import argparse
 import matplotlib.pyplot as plt
 psr = argparse.ArgumentParser()
 psr.add_argument('-i', dest="interval", help="input interval root file")
 psr.add_argument("-o", dest="opt", help="output")
 args = psr.parse_args()
-fcx = uproot.lazyarray(args.interval, "fc", "observe")[0]
-fcy = uproot.lazyarray(args.interval, "fc", "up")[0]
-bkg = uproot.lazyarray(args.interval, "fc", "bkg")[0]
-sensitivity = uproot.lazyarray(args.interval, "fc", "sensitivity")[0]
-print("upper limit:{};sensitivity:{}".format(fcy[0],sensitivity))
+fcx = uproot3.lazyarray(args.interval, "fc", "observe")[0]
+fcy = uproot3.lazyarray(args.interval, "fc", "up")[0]
+bkg = uproot3.lazyarray(args.interval, "fc", "bkg")[0]
+sensitivity = uproot3.lazyarray(args.interval, "fc", "sensitivity")[0]
+print("upperlimit,sensitivity")
+print("{};{}".format(fcy[0], sensitivity))
 '''
-bax = uproot.lazyarray(args.interval, "bayes", "observe")[0]
-bay = uproot.lazyarray(args.interval, "bayes", "up")[0]
-clx = uproot.lazyarray(args.interval, "CLs", "observe")[0]
-cly = uproot.lazyarray(args.interval, "CLs", "up")[0]
+bax = uproot3.lazyarray(args.interval, "bayes", "observe")[0]
+bay = uproot3.lazyarray(args.interval, "bayes", "up")[0]
+clx = uproot3.lazyarray(args.interval, "CLs", "observe")[0]
+cly = uproot3.lazyarray(args.interval, "CLs", "up")[0]
 '''
 fig, ax = plt.subplots()
 ax.plot(fcx[0:3000], fcy[0:3000], label='Feldman Cousin Method')
