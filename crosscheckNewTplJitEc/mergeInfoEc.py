@@ -19,8 +19,8 @@ psr.add_argument('-m', dest='michel', nargs='+', help='michel info')
 args = psr.parse_args()
 print(args)
 up90 = []
-shapefeature = np.array([],dtype=[('t10080', '<f4'), ('over5090', '<f4')])
-michelinfo = np.array([],dtype=[('nMichel','<i2'),('selectnMichel','<i2'),('micheldistance','<f4'),('nCap','<i2'),('selectnCap','<i2'),('ndistance','<f4')])
+shapefeature = np.array([], dtype=[('t10080', '<f4'), ('over5090', '<f4')])
+michelinfo = np.array([], dtype=[('nMichel','<i2'),('selectnMichel','<i2'),('micheldistance','<f4'),('nCap','<i2'),('selectnCap','<i2'),('ndistance','<f4'),('MichelEdep','<f4'),('PDNCEdep','<f4')])
 for u9, sf, mi in zip(args.up90, args.sf, args.michel):
     with h5py.File(u9, 'r') as ipt:
         up90 = np.append(up90, ipt['t90'][:])
@@ -65,9 +65,9 @@ mergeinfo['E2'] = fitRes['E2']/mergeEcorr[:,1]
 mergeinfo['E3'] = fitRes['E3']
 fitResEtotal = mergeinfo['E1']+mergeinfo['E2']+mergeinfo['E3']
 index = fitResEtotal!=0
-mergeinfo['E1Norm'][index] = mergeinfo['E1'][index]/fitResEtotal[index]*fitRes['Qedep'][index]
-mergeinfo['E2Norm'][index] = mergeinfo['E2'][index]/fitResEtotal[index]*fitRes['Qedep'][index]
-mergeinfo['E3Norm'][index] = mergeinfo['E3'][index]/fitResEtotal[index]*fitRes['Qedep'][index]
+mergeinfo['E1Norm'][index] = mergeinfo['E1'][index]/fitResEtotal[index]*(fitRes['Qedep'][index]-michelinfo['MichelEdep'][index]-michelinfo['PDNCEdep'][index])
+mergeinfo['E2Norm'][index] = mergeinfo['E2'][index]/fitResEtotal[index]*(fitRes['Qedep'][index]-michelinfo['MichelEdep'][index]-michelinfo['PDNCEdep'][index])
+mergeinfo['E3Norm'][index] = mergeinfo['E3'][index]/fitResEtotal[index]*(fitRes['Qedep'][index]-michelinfo['MichelEdep'][index]-michelinfo['PDNCEdep'][index])
 mergeinfo['t1'] = fitRes['t1']
 mergeinfo['t2'] = fitRes['t2']
 mergeinfo['t3'] = fitRes['t3']
@@ -81,11 +81,10 @@ mergeinfo['chi2'] = fitRes['chi2']
 mergeinfo['Up90'] = up90
 mergeinfo['t10080'] = shapefeature['t10080']
 mergeinfo['over5090'] = shapefeature['over5090']
-#mergeinfo['nCap'] = ncap
-#mergeinfo['nDist'] = nDist
+
 mergeinfo['nCap'] = michelinfo['selectnCap']
 mergeinfo['nDist'] = michelinfo['ndistance']
-# mergeinfo['nMichel'] = nmichel
+
 mergeinfo['nMichel'] = michelinfo['selectnMichel']
 mergeinfo['michelDist'] = michelinfo['micheldistance']
 with h5py.File(args.opt, 'w') as opt:

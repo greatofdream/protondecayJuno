@@ -1,8 +1,8 @@
-import uproot, numpy as np, argparse, h5py
+import uproot3, numpy as np, argparse, h5py
 from numba import jit
 import matplotlib.pyplot as plt
 '''
-statistic of michel electron position between center of energy depoiste; michel number
+statistic of michel electron position between center of energy depoiste; michel number; neutron info
 '''
 
 @jit(nopython=True)
@@ -22,30 +22,35 @@ psr.add_argument('-b', dest='begin', type=int, help='begin time of michel electr
 psr.add_argument('-e', dest='end', type=int, help='end time of michel electron')
 args = psr.parse_args()
 iptFiles = args.ipt
-michelT = uproot.lazyarray(iptFiles, "evtinfo", "MichelStartT")
-michelX = uproot.lazyarray(iptFiles, "evtinfo", "MichelStartX")
-michelY = uproot.lazyarray(iptFiles, "evtinfo", "MichelStartY")
-michelZ = uproot.lazyarray(iptFiles, "evtinfo", "MichelStartZ")
-x0List = uproot.lazyarray(iptFiles, "evtinfo", "Edep_PromptX")
-y0List = uproot.lazyarray(iptFiles, "evtinfo", "Edep_PromptY")
-z0List = uproot.lazyarray(iptFiles, "evtinfo", "Edep_PromptZ")
+michelT = uproot3.lazyarray(iptFiles, "evtinfo", "MichelStartT")
+michelX = uproot3.lazyarray(iptFiles, "evtinfo", "MichelStartX")
+michelY = uproot3.lazyarray(iptFiles, "evtinfo", "MichelStartY")
+michelZ = uproot3.lazyarray(iptFiles, "evtinfo", "MichelStartZ")
+michelE = uproot3.lazyarray(iptFiles, "evtinfo", "MichelStartE")
+MichelEdep = uproot3.lazyarray(iptFiles, "evtinfo", "MichelEdep")
+x0List = uproot3.lazyarray(iptFiles, "evtinfo", "Edep_PromptX")
+y0List = uproot3.lazyarray(iptFiles, "evtinfo", "Edep_PromptY")
+z0List = uproot3.lazyarray(iptFiles, "evtinfo", "Edep_PromptZ")
 
-PDNCT = uproot.lazyarray(iptFiles, "evtinfo", "PDNCStartT")
-PDNCX = uproot.lazyarray(iptFiles, "evtinfo", "PDNCStartX")
-PDNCY = uproot.lazyarray(iptFiles, "evtinfo", "PDNCStartY")
-PDNCZ = uproot.lazyarray(iptFiles, "evtinfo", "PDNCStartZ")
-PDNCE = uproot.lazyarray(iptFiles, "evtinfo", "PDNCStartE")
+PDNCT = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCStartT")
+PDNCX = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCStartX")
+PDNCY = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCStartY")
+PDNCZ = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCStartZ")
+PDNCE = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCStartE")
+PDNCEdep = uproot3.lazyarray(iptFiles, "evtinfo", "PDNCEdep")
 
 entries = len(michelT)
-michelInfo = np.zeros(entries,dtype=[('nMichel','<i2'),('selectnMichel','<i2'),('micheldistance','<f4'),('nCap','<i2'),('selectnCap','<i2'),('ndistance','<f4')])
+michelInfo = np.zeros(entries,dtype=[('nMichel','<i2'),('selectnMichel','<i2'),('micheldistance','<f4'),('nCap','<i2'),('selectnCap','<i2'),('ndistance','<f4'),('MichelEdep','<f4'),('PDNCEdep','<f4')])
 
-for i,(t,x,y,z,x0,y0,z0,tn,xn,yn,zn,e) in enumerate(zip(michelT, michelX, michelY, michelZ,x0List,y0List,z0List,PDNCT,PDNCX,PDNCY,PDNCZ,PDNCE)):
-    index = (t>=args.begin)&(t<=args.end)# 10MeV~54MeV, <1.5m
+for i,(t,x,y,z,x0,y0,z0,em,tn,xn,yn,zn,e,med,ned) in enumerate(zip(michelT, michelX, michelY, michelZ,x0List,y0List,z0List,michelE,PDNCT,PDNCX,PDNCY,PDNCZ,PDNCE,MichelEdep,PDNCEdep)):
+    index = (t>=args.begin)&(t<=args.end)&(em>10)&(em<54)# 10MeV~54MeV, <1.5m
     michelInfo[i]['selectnMichel'],michelInfo[i]['micheldistance'] = michelStatistic(x[index],y[index],z[index],x0,y0,z0)
     michelInfo[i]['nMichel'] = len(x)
     indexn = (tn>=1000)&(tn<=2500000)&(e<=2.5)&(e>=1.9)#<5
     michelInfo[i]['selectnCap'],michelInfo[i]['ndistance'] = michelStatistic(xn[indexn],yn[indexn],zn[indexn],x0,y0,z0)
     michelInfo[i]['nCap'] = len(xn)
+    michelInfo[i]['MichelEdep'] = np.sum(med)
+    michelInfo[i]['PDNCEdep'] = np.sum(ned)
 with h5py.File(args.opt, 'w') as opt:
     opt.create_dataset('michel',data=michelInfo, compression='gzip')
 

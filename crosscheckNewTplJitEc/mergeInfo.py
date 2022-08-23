@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import h5py,numpy as np,uproot3 as uproot
+import h5py, numpy as np, uproot3
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -19,8 +19,9 @@ psr.add_argument('-m', dest='michel', nargs='+', help='michel info')
 args = psr.parse_args()
 print(args)
 up90 = []
-shapefeature = np.array([],dtype=[('t10080', '<f4'), ('over5090', '<f4')])
-michelinfo = np.array([],dtype=[('nMichel','<i2'),('micheldistance','<f4')])
+shapefeature = np.array([], dtype=[('t10080', '<f4'), ('over5090', '<f4')])
+michelinfo = np.array([], dtype=[
+    ('nMichel','<i2'), ('selectnMichel','<i2'), ('micheldistance','<f4'), ('nCap','<i2'), ('selectnCap','<i2'), ('ndistance','<f4'), ('MichelEdep','<f4'), ('PDNCEdep','<f4')])
 for u9, sf, mi in zip(args.up90, args.sf, args.michel):
     with h5py.File(u9, 'r') as ipt:
         up90 = np.append(up90, ipt['t90'][:])
@@ -28,13 +29,15 @@ for u9, sf, mi in zip(args.up90, args.sf, args.michel):
         shapefeature = np.append(shapefeature, ipt['shapefeature'][:][['t10080','over5090']])
     with h5py.File(mi, 'r') as ipt:
         michelinfo = np.append(michelinfo, ipt['michel'][:])
-r0List = uproot.lazyarray(args.ipt, "evtinfo", "Edep_PromptR")
-ncap = uproot.lazyarray(args.ipt, "evtinfo", "CaptureTag")
-# nmichel = uproot.lazyarray(args.ipt, "evtinfo", "MichelTag")
-hitTimeSingle = uproot.lazyarray(args.ipt, "evtinfo", "HitTimeSingle", basketcache=uproot.cache.ThreadSafeArrayCache("8 MB"))
+r0List = uproot3.lazyarray(args.ipt, "evtinfo", "Edep_PromptR")
+ncap = uproot3.lazyarray(args.ipt, "evtinfo", "CaptureTag")
+
+hitTimeSingle = uproot3.lazyarray(args.ipt, "evtinfo", "HitTimeSingle", basketcache=uproot3.cache.ThreadSafeArrayCache("8 MB"))
 entries = len(ncap)
 fitRes = np.array([], dtype=[('eid', '<i4'), ('likelihood', '<f4'), ('E1', '<f4'), ('E2', '<f4'), ('E3', '<f4'), ('t1', '<f4'), ('t2', '<f4'), ('t3', '<f4'), ('npeak', '<i2'),  ('Qedep', '<f4'), ('bkg', '<f4'), ('chisquare1', '<f4'), ('chisquare2', '<f4'),('chi1','<f4'),('chi2','<f4'),('ndf','<i2')])
-mergeinfo = np.zeros(entries, dtype=[('eid', '<i4'), ('likelihood', '<f4'), ('E1', '<f4'), ('E2', '<f4'), ('E3', '<f4'), ('E1Norm', '<f4'), ('E2Norm', '<f4'), ('E3Norm', '<f4'), ('t1', '<f4'), ('t2', '<f4'), ('t3', '<f4'), ('npeak', '<i2'),  ('Qedep', '<f4'), ('bkg', '<f4'), ('chisquare1', '<f4'), ('chisquare2', '<f4'),('chi1','<f4'),('chi2','<f4'),('ndf','<i2'), ('Up90', 'f4'), ('t10080', '<f4'), ('over5090', '<f4'), ('nCap','<i2'), ('nMichel', '<i2'),('michelDist', '<f4'),('edepR','<f4')])
+mergeinfo = np.zeros(entries, dtype=[
+    ('eid', '<i4'), ('likelihood', '<f4'), ('E1', '<f4'), ('E2', '<f4'), ('E3', '<f4'), ('E1Norm', '<f4'), ('E2Norm', '<f4'), ('E3Norm', '<f4'), ('t1', '<f4'), ('t2', '<f4'), ('t3', '<f4'), ('npeak', '<i2'),  ('Qedep', '<f4'), ('bkg', '<f4'), ('chisquare1', '<f4'), ('chisquare2', '<f4'),('chi1','<f4'),('chi2','<f4'),('ndf','<i2'), ('Up90', 'f4'), ('t10080', '<f4'), ('over5090', '<f4'), ('nCap','<i2'), ('nMichel', '<i2'),('michelDist', '<f4'),('edepR','<f4'), ('nDist','<f4')
+    ])
 for rs in args.result:
     with h5py.File(rs, 'r') as ipt:
         fitRes = np.append(fitRes, ipt['likelihood'][:])
@@ -62,8 +65,9 @@ mergeinfo['chi2'] = fitRes['chi2']
 mergeinfo['Up90'] = up90
 mergeinfo['t10080'] = shapefeature['t10080']
 mergeinfo['over5090'] = shapefeature['over5090']
-mergeinfo['nCap'] = ncap
-# mergeinfo['nMichel'] = nmichel
+
+mergeinfo['nCap'] = michelinfo['selectnCap']
+mergeinfo['nDist'] = michelinfo['ndistance']
 mergeinfo['nMichel'] = michelinfo['nMichel']
 mergeinfo['michelDist'] = michelinfo['micheldistance']
 mergeinfo['edepR'] = r0List
