@@ -18,5 +18,5 @@ df = pd.concat([s[0] for s in h5s], axis=1)
 df['sum'] = np.sum(df[[s[1]+'_num' for s in h5s]].values, axis=1)
 df['ratio'] = np.sum(df[[s[1]+'_ratio' for s in h5s]].values, axis=1)
 with h5py.File(args.opt, 'w') as opt:
-    opt.create_dataset('eff', data=df.values, compression='gzip')
+    opt.create_dataset('eff', data=df.to_records(), compression='gzip')
 print(df)
