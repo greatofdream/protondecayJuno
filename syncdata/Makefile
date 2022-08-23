@@ -16,7 +16,7 @@ downsig:
 downnewsig1:
 	mkdir -p SIG_LSPMT
 	# sshpass -p juno2020@ scp lxslc701.ihep.ac.cn:/junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation_result/Fitting/SIG/ana-result-2/Data-0301/PDNewData_A_0.root SIG_LSPMT/
-	rsync -P --rsh='sshpass -p $(PASSWORD) ssh -l junoprotondecay' lxslc701.ihep.ac.cn:/junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation_result/Fitting_latestGen/SIG/ana-result/Data-0818/PDNewData_A_0.root SIG_LSPMT/
+	rsync -P --rsh='sshpass -p $(PASSWORD) ssh -l junoprotondecay' lxslc701.ihep.ac.cn:/junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation_result/Fitting_latestGen/SIG/ana-result/Data-0818/PDNewData_A_0.root SIG_LSPMT/PDRawData_0.root
 downnewbkg1:
 	mkdir -p BKGnew
 	rsync -P --rsh='sshpass -p $(PASSWORD) ssh -l junoprotondecay' lxslc701.ihep.ac.cn:/junofs/users/junoprotondecay/guoyh/offlines/offline3745/simulation_result/Fitting/BKG/ana-result-2/Data-0301/* BKGnew/
