@@ -6,6 +6,13 @@ pythonPrefix:=/home/greatofdream/python/bin
 pdpath:=$(wildcard $(pathPrefix)/SIG_LSPMT/PDRawData_*.root)
 bkgpath:=$(wildcard $(pathPrefix)/BKGsplit/ANRawData_*.root)
 pdnewpath:=$(wildcard $(pathPrefix)/SIG_LSPMT/PDRawData_A_*.root)
+all: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/t90/T90C300Delta0_%.h5) $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/t90/T90C300Delta0_%.h5)
+all: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/michel/%.h5) $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/michel/%.h5)
+all: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/shapefeature/C300Delta0_%.h5) $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/shapefeature/C300Delta0_%.h5)
+all: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/fit300Mtpl/1nsInit-%.h5) $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/fit300Mtpl/1nsInit-%.h5)
+# all: bkg/fit300Mtpl/res.h5 sig/fit300Mtpl/res.h5 bkg/fit300Mtpl/res.pdf sig/fit300Mtpl/res.pdf sig/fit300Mtpl/Fitres.pdf bkg/fit300Mtpl/Fitres.pdf
+# all: bkg/fit300Mtpl/fitEc_res.h5 sig/fit300Mtpl/fitEc_res.h5
+all:  bkg/fit300Mtpl/efficiency.h5 sig/fit300Mtpl/efficiency.h5
 # t90 part
 t90log:=""
 ## cut length 500
@@ -27,10 +34,10 @@ t90/bkgT90C300Delta0-.h5: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/
 t90/sigT90C300Delta0-.h5: $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/t90/T90C300Delta0_%.h5)
 sig/t90/T90C300Delta0_%.h5: $(pathPrefix)/SIG_LSPMT/PDRawData_%.root
 	mkdir -p $(dir $@)
-	python3 t90.py -o $@ -p $^ -l $(t90log) -d 0 -c 300 >$@.log 2>&1 
+	$(pythonPrefix)/python3 t90.py -o $@ -p $^ -l $(t90log) -d 0 -c 300 >$@.log 2>&1 
 bkg/t90/T90C300Delta0_%.h5: $(pathPrefix)/BKGsplit/ANRawData_%.root
 	mkdir -p $(dir $@)BKGsplit
-	python3 t90.py -o $@ -p $^ -l $(t90log) -d 0 -c 300 >$@.log 2>&1
+	$(pythonPrefix)/python3 t90.py -o $@ -p $^ -l $(t90log) -d 0 -c 300 >$@.log 2>&1
 bkg/t90/compareC300.pdf: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/t90/T90C300Delta0_%.h5)
 	python3 t90compare.py -i $(bkgpath) -c $^ -o $@ >$@.log 2>&1
 sig/t90/compareC300.pdf: $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/t90/T90C300Delta0_%.h5)
@@ -38,7 +45,7 @@ sig/t90/compareC300.pdf: $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/t
 
 # michel part
 michel/bkg_.h5: $(bkgpath:$(pathPrefix)/BKGsplit/ANRawData_%.root=bkg/michel/%.h5)
-michel/sig_.h5: $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/michel/.h5)
+michel/sig_.h5: $(pdpath:$(pathPrefix)/SIG_LSPMT/PDRawData_%.root=sig/michel/%.h5)
 sig/michel/%.h5: $(pathPrefix)/SIG_LSPMT/PDRawData_%.root
 	mkdir -p $(dir $@)
 	python3 getMichelInfo.py -o $@ -i $^ -b 150 -e 10000 >$@.log 2>&1
@@ -166,6 +173,24 @@ sig/fit300Mtpl/Fitres.pdf: sig/fit300Mtpl/res.h5
 bkg/fit300Mtpl/Fitres.pdf: bkg/fit300Mtpl/res.h5
 	mkdir -p $(dir $@)
 	python3 $(srcPrefix)/viewFit.py -i $^ -o $@ >$@.log 2>&1
+# calculate the efficiency
+bkg/fit300Mtpl/efficiency10.h5: bkg/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 1 --ntag 0 > $@.log
+bkg/fit300Mtpl/efficiency11.h5: bkg/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 1 --ntag 1 > $@.log
+bkg/fit300Mtpl/efficiency20.h5: bkg/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 2 --ntag 0 > $@.log
+sig/fit300Mtpl/efficiency10.h5: sig/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 1 --ntag 0 > $@.log
+sig/fit300Mtpl/efficiency11.h5: sig/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 1 --ntag 1 > $@.log
+sig/fit300Mtpl/efficiency20.h5: sig/fit300Mtpl/fitEc_res.h5
+	python3 Efficiency.py -i $^ -o $@ --nm 2 --ntag 0 > $@.log
+bkg/fit300Mtpl/efficiency.h5: bkg/fit300Mtpl/efficiency10.h5 bkg/fit300Mtpl/efficiency11.h5 bkg/fit300Mtpl/efficiency20.h5
+	python3 EfficiencyMerge.py -i $^ -o $@   > $@.log
+sig/fit300Mtpl/efficiency.h5: sig/fit300Mtpl/efficiency10.h5 sig/fit300Mtpl/efficiency11.h5 sig/fit300Mtpl/efficiency20.h5
+	python3 EfficiencyMerge.py -i $^ -o $@   > $@.log
+
 # compare/fit300Mtpl: 
 # 	python3 $(srcPrefix)/fit300Mtpl/fitcompare.py -i fit300Mtpl/sigFitres.pdf.h5 -a fit300Mtpl/bkgFitres.pdf.h5 -o test
 
